@@ -1,0 +1,482 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container-fluid">
+	<!-- Statistics Dashboard -->
+	<div class="row mb-4">
+		<div class="col-md-12">
+			<div class="card">
+				<div class="card-header">
+					<h3><i class="fa fa-dashboard"></i> {{ _("User Permission Statistics") }}</h3>
+				</div>
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-3">
+							<div class="stat-box text-center p-3">
+								<h4 class="text-primary">{{ stats.total_managers }}</h4>
+								<p class="text-muted">{{ _("Total Managers") }}</p>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="stat-box text-center p-3">
+								<h4 class="text-success">{{ stats.active_managers }}</h4>
+								<p class="text-muted">{{ _("Active Managers") }}</p>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="stat-box text-center p-3">
+								<h4 class="text-info">{{ stats.total_permissions }}</h4>
+								<p class="text-muted">{{ _("Total Permissions") }}</p>
+							</div>
+						</div>
+						<div class="col-md-3">
+							<div class="stat-box text-center p-3">
+								<h4 class="text-warning">{{ stats.users_with_permissions }}</h4>
+								<p class="text-muted">{{ _("Users with Permissions") }}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Permission Managers List -->
+	<div class="row">
+		<div class="col-md-8">
+			<div class="card">
+				<div class="card-header">
+					<h4><i class="fa fa-list"></i> {{ _("Permission Managers") }}</h4>
+					<div class="float-right">
+						<button class="btn btn-primary btn-sm" onclick="location.href='/app/user-permission-manager/new'">
+							<i class="fa fa-plus"></i> {{ _("New Manager") }}
+						</button>
+					</div>
+				</div>
+				<div class="card-body">
+					{% if managers %}
+					<div class="table-responsive">
+						<table class="table table-hover" id="managers-table">
+							<thead>
+								<tr>
+									<th>{{ _("Manager Name") }}</th>
+									<th>{{ _("Description") }}</th>
+									<th>{{ _("Target") }}</th>
+									<th>{{ _("Permissions") }}</th>
+									<th>{{ _("Status") }}</th>
+									<th>{{ _("Actions") }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for manager in managers %}
+								<tr>
+									<td>
+										<strong>{{ manager.manager_name }}</strong>
+									</td>
+									<td>{{ manager.description or 'No description' }}</td>
+									<td>
+										{% if manager.apply_to_all_users %}
+											<span class="badge badge-info">All Users</span>
+										{% else %}
+											<span class="badge badge-secondary">{{ manager.user_field or 'Not Set' }}</span>
+										{% endif %}
+									</td>
+									<td>
+										<span class="badge badge-light">{{ manager.permission_count }} permissions</span>
+									</td>
+									<td>
+										{% if manager.is_active %}
+											<span class="badge badge-success">Active</span>
+										{% else %}
+											<span class="badge badge-warning">Inactive</span>
+										{% endif %}
+									</td>
+									<td>
+										<div class="btn-group btn-group-sm">
+											<button class="btn btn-outline-primary" onclick="viewManager('{{ manager.name }}')">
+												<i class="fa fa-eye"></i>
+											</button>
+											<button class="btn btn-outline-success" onclick="previewManager('{{ manager.name }}')">
+												<i class="fa fa-search"></i>
+											</button>
+											<button class="btn btn-outline-info" onclick="applyManager('{{ manager.name }}')">
+												<i class="fa fa-play"></i>
+											</button>
+										</div>
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% else %}
+					<div class="text-center text-muted py-4">
+						<i class="fa fa-folder-open fa-3x mb-3"></i>
+						<p>{{ _("No User Permission Managers found") }}</p>
+						<a href="/app/user-permission-manager/new" class="btn btn-primary">
+							{{ _("Create First Manager") }}
+						</a>
+					</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+
+		<!-- Quick Actions -->
+		<div class="col-md-4">
+			<div class="card">
+				<div class="card-header">
+					<h5><i class="fa fa-bolt"></i> {{ _("Quick Actions") }}</h5>
+				</div>
+				<div class="card-body">
+					<div class="d-grid gap-2">
+						<button class="btn btn-info" onclick="showPermissionSummary()">
+							<i class="fa fa-chart-bar"></i> {{ _("View Permission Summary") }}
+						</button>
+						<button class="btn btn-warning" onclick="syncAllManagers()">
+							<i class="fa fa-sync"></i> {{ _("Sync All Managers") }}
+						</button>
+						<button class="btn btn-success" onclick="bulkApplyDialog()">
+							<i class="fa fa-users"></i> {{ _("Bulk Apply to Users") }}
+						</button>
+					</div>
+
+					<hr>
+
+					<h6>{{ _("User Lookup") }}</h6>
+					<div class="form-group">
+						<select class="form-control" id="user-select">
+							<option value="">{{ _("Select a user") }}</option>
+							{% for user in users %}
+							<option value="{{ user.name }}">{{ user.full_name or user.name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<button class="btn btn-outline-primary btn-sm" onclick="viewUserPermissions()">
+						<i class="fa fa-user"></i> {{ _("View User Permissions") }}
+					</button>
+				</div>
+			</div>
+
+			<!-- Common Permission Types -->
+			<div class="card mt-3">
+				<div class="card-header">
+					<h6><i class="fa fa-chart-pie"></i> {{ _("Common Permission Types") }}</h6>
+				</div>
+				<div class="card-body">
+					{% for perm in stats.common_permissions %}
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<span>{{ perm.allow }}</span>
+						<span class="badge badge-primary">{{ perm.count }}</span>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modals and JavaScript -->
+<script>
+$(document).ready(function() {
+	// Initialize DataTable
+	$('#managers-table').DataTable({
+		pageLength: 10,
+		order: [[0, 'asc']],
+		columnDefs: [
+			{ orderable: false, targets: [5] }  // Disable ordering on Actions column
+		]
+	});
+});
+
+function viewManager(managerName) {
+	window.open('/app/user-permission-manager/' + managerName, '_blank');
+}
+
+function previewManager(managerName) {
+	frappe.call({
+		method: 'duplicate.api.user_permission_utils.get_permission_manager_preview',
+		args: { manager_name: managerName },
+		callback: function(r) {
+			if (r.message) {
+				showPreviewModal(r.message);
+			}
+		}
+	});
+}
+
+function showPreviewModal(data) {
+	let html = '<div class="manager-preview">';
+	html += '<h6>Manager Details</h6>';
+	html += '<p><strong>Name:</strong> ' + data.manager_details.manager_name + '</p>';
+	html += '<p><strong>Description:</strong> ' + (data.manager_details.description || 'No description') + '</p>';
+	html += '<p><strong>Target Users:</strong> ' + data.target_user_count + ' users</p>';
+	
+	if (data.permission_details.length > 0) {
+		html += '<h6 class="mt-3">Permission Details</h6>';
+		html += '<table class="table table-sm table-bordered">';
+		html += '<thead><tr><th>Allow</th><th>For Value</th><th>Applicable For</th></tr></thead>';
+		html += '<tbody>';
+		
+		data.permission_details.forEach(function(perm) {
+			html += '<tr>';
+			html += '<td>' + perm.allow + '</td>';
+			html += '<td>' + perm.for_value + '</td>';
+			html += '<td>' + (perm.applicable_for || 'All DocTypes') + '</td>';
+			html += '</tr>';
+		});
+		
+		html += '</tbody></table>';
+	}
+	
+	html += '</div>';
+	
+	frappe.msgprint({
+		title: 'Permission Manager Preview',
+		message: html,
+		wide: true
+	});
+}
+
+function applyManager(managerName) {
+	let d = new frappe.ui.Dialog({
+		title: 'Apply Permission Manager',
+		fields: [
+			{
+				fieldname: 'user',
+				fieldtype: 'Link',
+				label: 'User',
+				options: 'User',
+				reqd: 1,
+				get_query: function() {
+					return {
+						filters: {
+							'enabled': 1,
+							'user_type': 'System User'
+						}
+					};
+				}
+			}
+		],
+		primary_action_label: 'Apply',
+		primary_action: function() {
+			let values = d.get_values();
+			if (values.user) {
+				frappe.call({
+					method: 'duplicate.duplicate.doctype.user_permission_manager.user_permission_manager.apply_permission_manager_to_user',
+					args: {
+						manager_name: managerName,
+						user_email: values.user
+					},
+					callback: function(r) {
+						if (r.message && r.message.success) {
+							frappe.show_alert({
+								message: r.message.message,
+								indicator: 'green'
+							});
+							d.hide();
+						}
+					}
+				});
+			}
+		}
+	});
+	d.show();
+}
+
+function syncAllManagers() {
+	frappe.confirm('Sync all active permission managers?', function() {
+		frappe.call({
+			method: 'duplicate.api.user_permission_utils.sync_all_permission_managers',
+			freeze: true,
+			freeze_message: 'Syncing all managers...',
+			callback: function(r) {
+				if (r.message) {
+					let msg = `Synced ${r.message.success_count} out of ${r.message.total_managers} managers successfully.`;
+					frappe.show_alert({
+						message: msg,
+						indicator: 'green'
+					});
+				}
+			}
+		});
+	});
+}
+
+function bulkApplyDialog() {
+	let d = new frappe.ui.Dialog({
+		title: 'Bulk Apply Permission Manager',
+		fields: [
+			{
+				fieldname: 'manager',
+				fieldtype: 'Link',
+				label: 'Permission Manager',
+				options: 'User Permission Manager',
+				reqd: 1,
+				get_query: function() {
+					return { filters: { 'is_active': 1 } };
+				}
+			},
+			{
+				fieldname: 'users',
+				fieldtype: 'Table MultiSelect',
+				label: 'Users',
+				options: 'User',
+				reqd: 1
+			}
+		],
+		primary_action_label: 'Apply to All',
+		primary_action: function() {
+			let values = d.get_values();
+			if (values.manager && values.users) {
+				frappe.call({
+					method: 'duplicate.api.user_permission_utils.bulk_apply_permission_manager',
+					args: {
+						manager_name: values.manager,
+						user_emails: values.users
+					},
+					freeze: true,
+					callback: function(r) {
+						if (r.message) {
+							let success_count = r.message.results.filter(x => x.success).length;
+							frappe.show_alert({
+								message: `Applied to ${success_count} users successfully`,
+								indicator: 'green'
+							});
+							d.hide();
+						}
+					}
+				});
+			}
+		}
+	});
+	d.show();
+}
+
+function viewUserPermissions() {
+	let user = $('#user-select').val();
+	if (!user) {
+		frappe.msgprint('Please select a user first');
+		return;
+	}
+	
+	frappe.call({
+		method: 'duplicate.api.user_permission_utils.get_user_permissions_summary',
+		args: { user_email: user },
+		callback: function(r) {
+			if (r.message) {
+				showUserPermissionsModal(user, r.message);
+			}
+		}
+	});
+}
+
+function showUserPermissionsModal(user, data) {
+	let html = '<div class="user-permissions-summary">';
+	html += '<h6>User: ' + user + '</h6>';
+	html += '<p>Total Permissions: ' + data.total_permissions + '</p>';
+	
+	if (data.managed_permissions.length > 0) {
+		html += '<h6 class="mt-3">Managed Permissions (' + data.managed_permissions.length + ')</h6>';
+		html += '<table class="table table-sm table-bordered">';
+		html += '<thead><tr><th>Allow</th><th>For Value</th><th>Manager</th></tr></thead>';
+		html += '<tbody>';
+		
+		data.managed_permissions.forEach(function(perm) {
+			html += '<tr>';
+			html += '<td>' + perm.allow + '</td>';
+			html += '<td>' + perm.for_value + '</td>';
+			html += '<td>' + (perm.manager_name || 'Unknown') + '</td>';
+			html += '</tr>';
+		});
+		
+		html += '</tbody></table>';
+	}
+	
+	if (data.manual_permissions.length > 0) {
+		html += '<h6 class="mt-3">Manual Permissions (' + data.manual_permissions.length + ')</h6>';
+		html += '<table class="table table-sm table-bordered">';
+		html += '<thead><tr><th>Allow</th><th>For Value</th><th>Applicable For</th></tr></thead>';
+		html += '<tbody>';
+		
+		data.manual_permissions.forEach(function(perm) {
+			html += '<tr>';
+			html += '<td>' + perm.allow + '</td>';
+			html += '<td>' + perm.for_value + '</td>';
+			html += '<td>' + (perm.applicable_for || 'All') + '</td>';
+			html += '</tr>';
+		});
+		
+		html += '</tbody></table>';
+	}
+	
+	html += '</div>';
+	
+	frappe.msgprint({
+		title: 'User Permissions Summary',
+		message: html,
+		wide: true
+	});
+}
+
+function showPermissionSummary() {
+	frappe.call({
+		method: 'duplicate.api.user_permission_utils.get_permission_statistics',
+		callback: function(r) {
+			if (r.message) {
+				let stats = r.message;
+				let html = '<div class="permission-stats">';
+				html += '<div class="row">';
+				html += '<div class="col-md-6">';
+				html += '<h6>Manager Statistics</h6>';
+				html += '<p>Total Managers: <strong>' + stats.total_managers + '</strong></p>';
+				html += '<p>Active Managers: <strong>' + stats.active_managers + '</strong></p>';
+				html += '<p>Inactive Managers: <strong>' + stats.inactive_managers + '</strong></p>';
+				html += '</div>';
+				html += '<div class="col-md-6">';
+				html += '<h6>Permission Statistics</h6>';
+				html += '<p>Total Permissions: <strong>' + stats.total_permissions + '</strong></p>';
+				html += '<p>Managed Permissions: <strong>' + stats.managed_permissions + '</strong></p>';
+				html += '<p>Manual Permissions: <strong>' + stats.manual_permissions + '</strong></p>';
+				html += '<p>Users with Permissions: <strong>' + stats.users_with_permissions + '</strong></p>';
+				html += '</div>';
+				html += '</div>';
+				html += '</div>';
+				
+				frappe.msgprint({
+					title: 'Permission Statistics',
+					message: html,
+					wide: true
+				});
+			}
+		}
+	});
+}
+</script>
+
+<style>
+.stat-box {
+	background-color: #f8f9fa;
+	border-radius: 5px;
+	border: 1px solid #dee2e6;
+}
+
+.stat-box h4 {
+	margin-bottom: 5px;
+}
+
+.stat-box p {
+	margin-bottom: 0;
+	font-size: 0.9em;
+}
+
+.table th {
+	font-weight: 600;
+	background-color: #f8f9fa;
+}
+
+.badge {
+	font-size: 0.75em;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container">
+	<div class="row">
+		<div class="col-md-8 offset-md-2">
+			<div class="card">
+				<div class="card-header">
+					<h3><i class="fa fa-copy"></i> {{ _("Easy Duplicate Role") }}</h3>
+					<p class="text-muted">{{ _("Create a copy of an existing role with all its permissions") }}</p>
+				</div>
+				<div class="card-body">
+					<form id="duplicate-role-form">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="form-group">
+									<label for="source-role">{{ _("Source Role") }}</label>
+									<select class="form-control" id="source-role" name="source_role" required>
+										<option value="">{{ _("Select a role to duplicate") }}</option>
+										{% for role in roles %}
+										<option value="{{ role.name }}" 
+												data-permissions="{{ role.permission_count }}"
+												{% if role.disabled %}data-disabled="true"{% endif %}>
+											{{ role.name }} 
+											{% if role.permission_count %}({{ role.permission_count }} permissions){% endif %}
+											{% if role.disabled %}(Disabled){% endif %}
+										</option>
+										{% endfor %}
+									</select>
+									<small class="form-text text-muted">{{ _("Choose the role you want to duplicate") }}</small>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="form-group">
+									<label for="new-role-name">{{ _("New Role Name") }}</label>
+									<input type="text" class="form-control" id="new-role-name" name="new_role_name" required>
+									<small class="form-text text-muted">{{ _("Enter the name for the new duplicated role") }}</small>
+								</div>
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="copy-permissions" name="copy_permissions" checked>
+								<label class="form-check-label" for="copy-permissions">
+									{{ _("Copy all permissions from source role") }}
+								</label>
+							</div>
+						</div>
+						
+						<div id="role-details" class="alert alert-info" style="display: none;">
+							<h6>{{ _("Source Role Details:") }}</h6>
+							<div id="role-info"></div>
+						</div>
+						
+						<div class="form-group">
+							<button type="submit" class="btn btn-primary" id="duplicate-btn">
+								<i class="fa fa-copy"></i> {{ _("Easy Duplicate Role") }}
+							</button>
+							<button type="button" class="btn btn-secondary" id="preview-btn">
+								<i class="fa fa-eye"></i> {{ _("Preview Role Details") }}
+							</button>
+						</div>
+					</form>
+					
+					<div id="result-container" style="display: none;">
+						<hr>
+						<div id="result-message"></div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Bulk Duplication Section -->
+			<div class="card mt-4">
+				<div class="card-header">
+					<h4><i class="fa fa-list"></i> {{ _("Bulk Role Duplication") }}</h4>
+					<p class="text-muted">{{ _("Duplicate multiple roles at once") }}</p>
+				</div>
+				<div class="card-body">
+					<div id="bulk-roles-container">
+						<div class="bulk-role-row" data-row="0">
+							<div class="row">
+								<div class="col-md-5">
+									<select class="form-control bulk-source-role" name="bulk_source_role[]">
+										<option value="">{{ _("Select source role") }}</option>
+										{% for role in roles %}
+										<option value="{{ role.name }}">{{ role.name }}</option>
+										{% endfor %}
+									</select>
+								</div>
+								<div class="col-md-5">
+									<input type="text" class="form-control bulk-new-name" name="bulk_new_name[]" placeholder="{{ _('New role name') }}">
+								</div>
+								<div class="col-md-2">
+									<button type="button" class="btn btn-danger remove-bulk-row" style="display: none;">
+										<i class="fa fa-trash"></i>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="mt-3">
+						<button type="button" class="btn btn-info" id="add-bulk-row">
+							<i class="fa fa-plus"></i> {{ _("Add More") }}
+						</button>
+						<button type="button" class="btn btn-primary" id="bulk-duplicate-btn">
+							<i class="fa fa-copy"></i> {{ _("Bulk Duplicate") }}
+						</button>
+					</div>
+					
+					<div id="bulk-result-container" style="display: none;">
+						<hr>
+						<div id="bulk-result-message"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+$(document).ready(function() {
+	// Auto-suggest new role name based on source role
+	$('#source-role').change(function() {
+		const sourceRole = $(this).val();
+		if (sourceRole) {
+			const suggestedName = sourceRole + ' Copy';
+			$('#new-role-name').val(suggestedName);
+		}
+	});
+	
+	// Preview role details
+	$('#preview-btn').click(function() {
+		const sourceRole = $('#source-role').val();
+		if (!sourceRole) {
+			frappe.msgprint('Please select a source role first.');
+			return;
+		}
+		
+		frappe.call({
+			method: 'duplicate.api.role_utils.get_role_details',
+			args: { role_name: sourceRole },
+			callback: function(r) {
+				if (r.message) {
+					const data = r.message;
+					let html = `
+						<p><strong>Role Name:</strong> ${data.role.role_name}</p>
+						<p><strong>Desk Access:</strong> ${data.role.desk_access ? 'Yes' : 'No'}</p>
+						<p><strong>Two Factor Auth:</strong> ${data.role.two_factor_auth ? 'Yes' : 'No'}</p>
+						<p><strong>Total Permissions:</strong> ${data.total_permissions}</p>
+						<p><strong>DocType Permissions:</strong> ${data.doctype_permissions.length}</p>
+						<p><strong>Custom Permissions:</strong> ${data.custom_permissions.length}</p>
+					`;
+					$('#role-info').html(html);
+					$('#role-details').show();
+				}
+			}
+		});
+	});
+	
+	// Handle form submission
+	$('#duplicate-role-form').submit(function(e) {
+		e.preventDefault();
+		
+		const sourceRole = $('#source-role').val();
+		const newRoleName = $('#new-role-name').val();
+		const copyPermissions = $('#copy-permissions').is(':checked');
+		
+		if (!sourceRole || !newRoleName) {
+			frappe.msgprint('Please fill in all required fields.');
+			return;
+		}
+		
+		$('#duplicate-btn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Duplicating...');
+		
+		frappe.call({
+			method: 'duplicate.api.role_utils.duplicate_role',
+			args: {
+				source_role: sourceRole,
+				new_role_name: newRoleName,
+				copy_permissions: copyPermissions
+			},
+			callback: function(r) {
+				$('#duplicate-btn').prop('disabled', false).html('<i class="fa fa-copy"></i> Easy Duplicate Role');
+				
+				if (r.message) {
+					const result = r.message;
+					let alertClass = result.success ? 'alert-success' : 'alert-danger';
+					let html = `<div class="alert ${alertClass}">${result.message}</div>`;
+					
+					$('#result-message').html(html);
+					$('#result-container').show();
+					
+					if (result.success) {
+						// Reset form
+						$('#duplicate-role-form')[0].reset();
+						$('#role-details').hide();
+					}
+				}
+			}
+		});
+	});
+	
+	// Bulk duplication functionality
+	let bulkRowCounter = 1;
+	
+	$('#add-bulk-row').click(function() {
+		const newRow = `
+			<div class="bulk-role-row mt-2" data-row="${bulkRowCounter}">
+				<div class="row">
+					<div class="col-md-5">
+						<select class="form-control bulk-source-role" name="bulk_source_role[]">
+							<option value="">{{ _("Select source role") }}</option>
+							{% for role in roles %}
+							<option value="{{ role.name }}">{{ role.name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="col-md-5">
+						<input type="text" class="form-control bulk-new-name" name="bulk_new_name[]" placeholder="{{ _('New role name') }}">
+					</div>
+					<div class="col-md-2">
+						<button type="button" class="btn btn-danger remove-bulk-row">
+							<i class="fa fa-trash"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		`;
+		$('#bulk-roles-container').append(newRow);
+		bulkRowCounter++;
+		updateRemoveButtons();
+	});
+	
+	$(document).on('click', '.remove-bulk-row', function() {
+		$(this).closest('.bulk-role-row').remove();
+		updateRemoveButtons();
+	});
+	
+	function updateRemoveButtons() {
+		const rows = $('.bulk-role-row');
+		if (rows.length > 1) {
+			$('.remove-bulk-row').show();
+		} else {
+			$('.remove-bulk-row').hide();
+		}
+	}
+	
+	$('#bulk-duplicate-btn').click(function() {
+		const rolesData = [];
+		let hasError = false;
+		
+		$('.bulk-role-row').each(function() {
+			const sourceRole = $(this).find('.bulk-source-role').val();
+			const newName = $(this).find('.bulk-new-name').val();
+			
+			if (sourceRole && newName) {
+				rolesData.push({
+					source_role: sourceRole,
+					new_role_name: newName,
+					copy_permissions: true
+				});
+			} else if (sourceRole || newName) {
+				hasError = true;
+			}
+		});
+		
+		if (hasError) {
+			frappe.msgprint('Please fill in both source role and new name for each row, or leave both empty.');
+			return;
+		}
+		
+		if (rolesData.length === 0) {
+			frappe.msgprint('Please add at least one role to duplicate.');
+			return;
+		}
+		
+		$('#bulk-duplicate-btn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Processing...');
+		
+		frappe.call({
+			method: 'duplicate.api.role_utils.bulk_duplicate_roles',
+			args: { roles_data: rolesData },
+			callback: function(r) {
+				$('#bulk-duplicate-btn').prop('disabled', false).html('<i class="fa fa-copy"></i> Bulk Duplicate');
+				
+				if (r.message && r.message.results) {
+					let html = '<h5>Bulk Duplication Results:</h5>';
+					r.message.results.forEach(function(item) {
+						const result = item.result;
+						let alertClass = result.success ? 'alert-success' : 'alert-danger';
+						html += `<div class="alert ${alertClass} py-2">
+							<strong>${item.source_role} → ${item.new_role_name}:</strong> ${result.message}
+						</div>`;
+					});
+					
+					$('#bulk-result-message').html(html);
+					$('#bulk-result-container').show();
+				}
+			}
+		});
+	});
+});
+</script>
+{% endblock %}

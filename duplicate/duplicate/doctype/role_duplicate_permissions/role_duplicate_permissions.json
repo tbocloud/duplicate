@@ -1,0 +1,194 @@
+{
+ "actions": [],
+ "creation": "2025-08-19 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "column_break_2",
+  "read",
+  "write",
+  "create",
+  "delete",
+  "column_break_6",
+  "submit",
+  "cancel",
+  "amend",
+  "column_break_9",
+  "report",
+  "export",
+  "import",
+  "column_break_12",
+  "print",
+  "email",
+  "share",
+  "column_break_15",
+  "if_owner",
+  "set_user_permissions"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "options": "DocType",
+   "reqd": 1,
+   "width": "200px"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "read",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Read",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "write",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Write",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "create",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Create",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "delete",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Delete",
+   "width": "80px"
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "submit",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Submit",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "cancel",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Cancel",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "amend",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Amend",
+   "width": "80px"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "report",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Report",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "export",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Export",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "import",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Import",
+   "width": "80px"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "print",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Print",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "email",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Email",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "share",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Share",
+   "width": "80px"
+  },
+  {
+   "fieldname": "column_break_15",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "if_owner",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "If Owner",
+   "width": "80px"
+  },
+  {
+   "default": "0",
+   "fieldname": "set_user_permissions",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Set User Permissions",
+   "width": "80px"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-08-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Duplicate",
+ "name": "Role Duplicate Permissions",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

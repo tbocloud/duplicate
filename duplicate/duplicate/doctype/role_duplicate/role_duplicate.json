@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-08-19 11:40:06.212402",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "source_role",
+  "new_role_name",
+  "column_break_3",
+  "description",
+  "is_active",
+  "section_break_5",
+  "role_permissions",
+  "section_break_7",
+  "create_role_button"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "ROLE-DUP-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_role",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Source Role",
+   "options": "Role",
+   "reqd": 1
+  },
+  {
+   "fieldname": "new_role_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "New Role Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break",
+   "label": "Role Permissions"
+  },
+  {
+   "fieldname": "role_permissions",
+   "fieldtype": "Table",
+   "label": "Role Permissions",
+   "options": "Role Duplicate Permissions"
+  },
+  {
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "create_role_button",
+   "fieldtype": "Button",
+   "label": "Create New Role"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-19 11:41:40.715641",
+ "modified_by": "Administrator",
+ "module": "Duplicate",
+ "name": "Role Duplicate",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "show_name_in_global_search": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
