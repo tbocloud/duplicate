@@ -86,10 +86,10 @@ def copy_role_permissions(source_role, target_role):
 		
 		# Copy all fields except name and role
 		fields_to_copy = [
-			"parent", "parenttype", "parentfield", "permlevel", 
-			"read", "write", "create", "delete", "submit", "cancel", 
-			"amend", "report", "export", "import", "set_user_permissions",
-			"share", "print", "email", "if_owner", "select", "match"
+			"parent", "parenttype", "parentfield", "permlevel",
+			"read", "write", "create", "delete", "submit", "cancel",
+			"amend", "report", "export", "import",
+			"share", "print", "email", "if_owner", "select"
 		]
 		
 		for field in fields_to_copy:
@@ -112,8 +112,8 @@ def copy_role_permissions(source_role, target_role):
 		fields_to_copy = [
 			"parent", "parenttype", "parentfield", "permlevel",
 			"read", "write", "create", "delete", "submit", "cancel",
-			"amend", "report", "export", "import", "set_user_permissions",
-			"share", "print", "email", "if_owner", "select", "match"
+			"amend", "report", "export", "import",
+			"share", "print", "email", "if_owner", "select"
 		]
 		
 		for field in fields_to_copy:
@@ -144,18 +144,18 @@ def get_role_details(role_name):
 	doctype_permissions = frappe.get_all(
 		"DocPerm",
 		filters={"role": role_name},
-		fields=["parent", "permlevel", "read", "write", "create", "delete", 
-				"submit", "cancel", "amend", "report", "export", "import", 
-				"set_user_permissions", "share", "print", "email", "if_owner"]
+		fields=["parent", "permlevel", "read", "write", "create", "delete",
+				"submit", "cancel", "amend", "report", "export", "import",
+				"share", "print", "email", "if_owner"]
 	)
 	
 	# Get Custom permissions
 	custom_permissions = frappe.get_all(
 		"Custom DocPerm",
 		filters={"role": role_name},
-		fields=["parent", "permlevel", "read", "write", "create", "delete", 
-				"submit", "cancel", "amend", "report", "export", "import", 
-				"set_user_permissions", "share", "print", "email", "if_owner"]
+		fields=["parent", "permlevel", "read", "write", "create", "delete",
+				"submit", "cancel", "amend", "report", "export", "import",
+				"share", "print", "email", "if_owner"]
 	)
 	
 	return {
