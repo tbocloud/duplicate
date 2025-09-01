@@ -225,7 +225,7 @@ A: Verify the user exists and has the necessary base permissions. User permissio
 A: This has been resolved in recent versions. The issue was caused by command objects in hooks.py. Update to the latest version which uses Frappe's command auto-discovery.
 
 **Q: Tests fail with "Allow must be set first" validation error**
-A: This has been fixed by properly handling Dynamic Link field validation in User Permission Details. The issue occurred when the `allow` field wasn't set before the `for_value` field.
+A: This has been fixed by properly handling Dynamic Link field validation in User Permission Details. The issue occurred when the `allow` field wasn't set before the `for_value` field, or when test data like `_Test Company` didn't exist. The latest version includes robust test data creation and proper field ordering.
 
 ### Debug Mode
 
@@ -273,8 +273,8 @@ This app uses GitHub Actions for CI with comprehensive testing. The following wo
 
 #### Recent CI Fixes (September 2025)
 - ✅ **Fixed Pickling Error**: Resolved `_pickle.PicklingError` in app installation caused by command object registration in hooks.py
-- ✅ **Fixed Test Failures**: Resolved "Allow must be set first" validation error in User Permission Manager tests by properly handling Dynamic Link fields
-- ✅ **Improved Test Reliability**: Enhanced test data setup and cleanup to handle edge cases in CI environments
+- ✅ **Fixed Test Failures**: Resolved "Allow must be set first" validation error in User Permission Manager tests by properly handling Dynamic Link field validation and ensuring test data exists
+- ✅ **Improved Test Reliability**: Enhanced test data setup and cleanup to handle edge cases in CI environments, including robust company creation and field validation
 - ✅ **Command Auto-Discovery**: Updated command registration to use Frappe's built-in auto-discovery mechanism
 
 All tests now pass successfully in the CI environment with proper MariaDB setup and complete app installation workflow.
