@@ -246,7 +246,5 @@ doc_events = {
 # Custom CLI Commands
 # -------------------
 # Add custom commands to bench
-from duplicate.duplicate.commands.role_commands import commands
-for command in commands:
-	globals()[command.name.replace('-', '_')] = command
+# Commands are automatically discovered by Frappe from the commands directory
 

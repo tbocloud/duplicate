@@ -147,4 +147,6 @@ def role_permissions(context, role_name, site):
 			frappe.destroy()
 
 
-commands = [duplicate_role, list_roles, role_permissions]
+# Export commands for Frappe to discover
+# These will be available as: bench duplicate-role, bench list-roles, bench role-permissions
+__all__ = ['duplicate_role', 'list_roles', 'role_permissions']
