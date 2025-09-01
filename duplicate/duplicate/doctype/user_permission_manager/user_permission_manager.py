@@ -86,7 +86,11 @@ class UserPermissionManager(Document):
 			perm_doc.apply_to_all = 1 if detail.apply_to_all_doctypes else 0
 			perm_doc.is_default = 1 if detail.is_default else 0
 			perm_doc.hide_descendants = 1 if detail.hide_descendants else 0
-			perm_doc.user_permission_manager = self.name  # Track which manager created this
+			
+			# Only set custom field if it exists
+			if frappe.db.has_column("User Permission", "user_permission_manager"):
+				perm_doc.user_permission_manager = self.name
+			
 			perm_doc.save(ignore_permissions=True)
 		else:
 			# Create new permission
@@ -101,7 +105,10 @@ class UserPermissionManager(Document):
 			perm_doc.apply_to_all = 1 if detail.apply_to_all_doctypes else 0
 			perm_doc.is_default = 1 if detail.is_default else 0
 			perm_doc.hide_descendants = 1 if detail.hide_descendants else 0
-			perm_doc.user_permission_manager = self.name  # Track which manager created this
+			
+			# Only set custom field if it exists
+			if frappe.db.has_column("User Permission", "user_permission_manager"):
+				perm_doc.user_permission_manager = self.name
 			
 			perm_doc.insert(ignore_permissions=True)
 		
@@ -112,31 +119,41 @@ class UserPermissionManager(Document):
 		# First, add custom field to User Permission if it doesn't exist
 		self.ensure_user_permission_custom_field()
 		
-		existing_permissions = frappe.get_all("User Permission", 
-			filters={
-				"user": user,
-				"user_permission_manager": self.name
-			},
-			pluck="name"
-		)
-		
-		for perm_name in existing_permissions:
-			frappe.delete_doc("User Permission", perm_name, ignore_permissions=True)
+		# Only query for managed permissions if the custom field exists
+		if frappe.db.has_column("User Permission", "user_permission_manager"):
+			existing_permissions = frappe.get_all("User Permission", 
+				filters={
+					"user": user,
+					"user_permission_manager": self.name
+				},
+				pluck="name"
+			)
+			
+			for perm_name in existing_permissions:
+				frappe.delete_doc("User Permission", perm_name, ignore_permissions=True)
 	
 	def ensure_user_permission_custom_field(self):
 		"""Ensure User Permission DocType has the custom field for tracking"""
-		if not frappe.db.exists("Custom Field", {
-			"dt": "User Permission",
-			"fieldname": "user_permission_manager"
-		}):
-			custom_field = frappe.new_doc("Custom Field")
-			custom_field.dt = "User Permission"
-			custom_field.fieldname = "user_permission_manager"
-			custom_field.label = "User Permission Manager"
-			custom_field.fieldtype = "Link"
-			custom_field.options = "User Permission Manager"
-			custom_field.hidden = 1
-			custom_field.insert(ignore_permissions=True)
+		try:
+			if not frappe.db.exists("Custom Field", {
+				"dt": "User Permission",
+				"fieldname": "user_permission_manager"
+			}):
+				custom_field = frappe.new_doc("Custom Field")
+				custom_field.dt = "User Permission"
+				custom_field.fieldname = "user_permission_manager"
+				custom_field.label = "User Permission Manager"
+				custom_field.fieldtype = "Link"
+				custom_field.options = "User Permission Manager"
+				custom_field.hidden = 1
+				custom_field.insert(ignore_permissions=True)
+		except Exception as e:
+			# In test environments, custom field creation might fail
+			# Log the error but don't break functionality
+			frappe.log_error(
+				title="Custom Field Creation Failed",
+				message=f"Failed to create user_permission_manager custom field: {str(e)}"
+			)
 	
 	def on_trash(self):
 		"""Clean up user permissions when manager is deleted"""

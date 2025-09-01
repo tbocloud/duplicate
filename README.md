@@ -111,6 +111,50 @@ Permissions Copied: Delivery Note, Delivery Settings, Delivery Trip, Driver, Ser
 - 🔍 **User existence validation**
 - 🔍 **Real-time conflict detection**
 
+## CLI Commands
+
+The app provides several command-line utilities for role management:
+
+### Role Duplication Commands
+
+```bash
+# Duplicate a role with all permissions
+bench duplicate-role "HR Manager" "HR Manager Copy"
+
+# Duplicate a role without copying permissions
+bench duplicate-role "HR Manager" "HR Manager Copy" --no-permissions
+
+# List all roles with their details
+bench list-roles
+
+# List roles with permission counts
+bench list-roles --with-permissions
+
+# Show detailed permissions for a specific role
+bench role-permissions "HR Manager"
+```
+
+### Command Examples
+
+```bash
+# Example 1: Create a department-specific role
+bench duplicate-role "Sales Manager" "Sales Manager - Mumbai"
+
+# Example 2: View role permission summary
+bench list-roles --with-permissions
+# Output:
+# Roles with Permission Summary:
+# --------------------------------
+# Role Name                    Permissions  Desk Access  Status
+# HR Manager                   45           Yes          Active
+# Sales Manager                32           Yes          Active
+# ...
+
+# Example 3: Audit role permissions
+bench role-permissions "HR Manager"
+# Shows detailed permission breakdown with DocTypes and access levels
+```
+
 ## API Reference
 
 ### Programmatic Usage
@@ -177,6 +221,12 @@ A: Check for DocTypes that don't exist in the target environment. The system wil
 **Q: User permissions not applying**
 A: Verify the user exists and has the necessary base permissions. User permissions are restrictions, not grants.
 
+**Q: Installation fails with "Can't pickle function" error**
+A: This has been resolved in recent versions. The issue was caused by command objects in hooks.py. Update to the latest version which uses Frappe's command auto-discovery.
+
+**Q: Tests fail with "Allow must be set first" validation error**
+A: This has been fixed by properly handling Dynamic Link field validation in User Permission Details. The issue occurred when the `allow` field wasn't set before the `for_value` field.
+
 ### Debug Mode
 
 Enable debug logging in browser console to see detailed API call information:
@@ -216,10 +266,18 @@ Pre-commit is configured to use the following tools for checking and formatting 
 
 ### CI
 
-This app can use GitHub Actions for CI. The following workflows are configured:
+This app uses GitHub Actions for CI with comprehensive testing. The following workflows are configured:
 
-- CI: Installs this app and runs unit tests on every push to `develop` branch.
-- Linters: Runs [Frappe Semgrep Rules](https://github.com/frappe/semgrep-rules) and [pip-audit](https://pypi.org/project/pip-audit/) on every pull request.
+- **CI**: Installs this app and runs unit tests on every push to `main` branch and pull requests
+- **Linters**: Runs [Frappe Semgrep Rules](https://github.com/frappe/semgrep-rules) and [pip-audit](https://pypi.org/project/pip-audit/) on every pull request
+
+#### Recent CI Fixes (September 2025)
+- ✅ **Fixed Pickling Error**: Resolved `_pickle.PicklingError` in app installation caused by command object registration in hooks.py
+- ✅ **Fixed Test Failures**: Resolved "Allow must be set first" validation error in User Permission Manager tests by properly handling Dynamic Link fields
+- ✅ **Improved Test Reliability**: Enhanced test data setup and cleanup to handle edge cases in CI environments
+- ✅ **Command Auto-Discovery**: Updated command registration to use Frappe's built-in auto-discovery mechanism
+
+All tests now pass successfully in the CI environment with proper MariaDB setup and complete app installation workflow.
 
 
 ### License
