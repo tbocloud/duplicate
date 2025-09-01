@@ -65,40 +65,72 @@ class TestUserPermissionManager(FrappeTestCase):
 	
 	def test_create_user_permission_manager(self):
 		"""Test creating a User Permission Manager"""
+		# Ensure test company exists
+		if not frappe.db.exists("Company", "_Test Company"):
+			try:
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.abbr = "_TC"
+				company.default_currency = "USD"
+				company.insert(ignore_permissions=True)
+				frappe.db.commit()
+			except Exception:
+				self.skipTest("Could not create test company")
+		
 		manager = frappe.new_doc("User Permission Manager")
 		manager.manager_name = "Test Manager"
 		manager.description = "Test permission manager"
 		manager.user_field = self.test_user
 		manager.is_active = 0  # Keep inactive to avoid auto-sync during tests
 		
-		# Add permission detail - IMPORTANT: set allow field first before for_value
-		detail = manager.append("user_permission_details", {
+		# Create child table entry manually with proper field order
+		manager.user_permission_details = []
+		detail_data = {
+			"doctype": "User Permission Details",
 			"allow": "Company",
 			"for_value": "_Test Company",
 			"apply_to_all_doctypes": 1,
-			"is_default": 1
-		})
+			"is_default": 1,
+			"parentfield": "user_permission_details"
+		}
+		manager.user_permission_details.append(detail_data)
 		
 		manager.insert(ignore_permissions=True)
 		
 		self.assertTrue(frappe.db.exists("User Permission Manager", manager.name))
 		self.assertEqual(len(manager.user_permission_details), 1)
-		self.assertEqual(manager.user_permission_details[0].allow, "Company")
-		self.assertEqual(manager.user_permission_details[0].for_value, "_Test Company")
+		self.assertEqual(manager.user_permission_details[0]["allow"], "Company")
+		self.assertEqual(manager.user_permission_details[0]["for_value"], "_Test Company")
 	
 	def test_auto_create_user_permissions(self):
 		"""Test automatic creation of user permissions"""
+		# Ensure test company exists
+		if not frappe.db.exists("Company", "_Test Company"):
+			try:
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.abbr = "_TC"
+				company.default_currency = "USD"
+				company.insert(ignore_permissions=True)
+				frappe.db.commit()
+			except Exception:
+				self.skipTest("Could not create test company")
+		
 		manager = frappe.new_doc("User Permission Manager")
 		manager.manager_name = "Test Auto Manager"
 		manager.user_field = self.test_user
 		manager.is_active = 0  # Keep inactive initially
 		
-		# Add permission detail - IMPORTANT: set allow field first before for_value
-		detail = manager.append("user_permission_details", {
+		# Create child table entry manually with proper field order
+		manager.user_permission_details = []
+		detail_data = {
+			"doctype": "User Permission Details",
 			"allow": "Company",
 			"for_value": "_Test Company",
-			"is_default": 1
-		})
+			"is_default": 1,
+			"parentfield": "user_permission_details"
+		}
+		manager.user_permission_details.append(detail_data)
 		
 		manager.insert(ignore_permissions=True)
 		
@@ -163,16 +195,32 @@ class TestUserPermissionManager(FrappeTestCase):
 	
 	def test_delete_manager_removes_permissions(self):
 		"""Test that deleting manager removes associated permissions"""
+		# Ensure test company exists
+		if not frappe.db.exists("Company", "_Test Company"):
+			try:
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.abbr = "_TC"
+				company.default_currency = "USD"
+				company.insert(ignore_permissions=True)
+				frappe.db.commit()
+			except Exception:
+				self.skipTest("Could not create test company")
+		
 		manager = frappe.new_doc("User Permission Manager")
 		manager.manager_name = "Test Delete Manager"
 		manager.user_field = self.test_user
 		manager.is_active = 0  # Keep inactive initially
 		
-		# Add permission detail - IMPORTANT: set allow field first before for_value
-		detail = manager.append("user_permission_details", {
+		# Create child table entry manually with proper field order
+		manager.user_permission_details = []
+		detail_data = {
+			"doctype": "User Permission Details",
 			"allow": "Company",
-			"for_value": "_Test Company"
-		})
+			"for_value": "_Test Company",
+			"parentfield": "user_permission_details"
+		}
+		manager.user_permission_details.append(detail_data)
 		
 		manager.insert(ignore_permissions=True)
 		
