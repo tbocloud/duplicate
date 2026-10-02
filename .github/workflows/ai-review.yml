@@ -1,0 +1,21 @@
+name: AI Review
+
+# Kimi reviews every pull request (tbocloud/ai-review). Required as the
+# "ai-review / review" check on the default branch; a person still approves.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ai-review:
+    uses: tbocloud/ai-review/.github/workflows/ai-review.yml@v1
+    secrets: inherit
